@@ -1,0 +1,14 @@
+# Python / tooling
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Downloaded market data (re-fetched from Yahoo Finance on first run)
+data/
+
+# Local editor/agent setup (symlinks into .venv)
+.agents/
+.claude/
+
+.DS_Store
