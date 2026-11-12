@@ -1,5 +1,6 @@
 """Shared pieces for the Streamlit pages: settings, cached data loading, chart styling."""
 
+import time
 from dataclasses import dataclass
 
 import pandas as pd
@@ -31,23 +32,34 @@ class Settings:
     tickers: list[str]
     lookback: int
     capital: float
-    refresh_token: int
+    refresh_token: tuple[int, int]
+
+
+# Prices are re-downloaded at most every DATA_MAX_AGE_HOURS, so a long-running (hosted)
+# app picks up new months on its own.
+DATA_MAX_AGE_HOURS = 12
 
 
 def settings() -> Settings:
-    """The sidebar values (the widgets live in app.py and write to session state)."""
+    """The sidebar values (the widgets live in app.py and write to session state).
+
+    `refresh_token` is the cache key for everything built from prices: (which 12-hour
+    window we're in, how many times "Re-download prices" was pressed). When either
+    changes, every cached result is recomputed from fresh data.
+    """
     s = st.session_state
-    return Settings(list(s.tickers), int(s.lookback), float(s.capital), s.get("refresh_token", 0))
+    window = int(time.time() // (DATA_MAX_AGE_HOURS * 3600))
+    return Settings(list(s.tickers), int(s.lookback), float(s.capital), (window, s.get("refresh_token", 0)))
 
 
-@st.cache_data(show_spinner="Downloading prices…")
-def daily_prices(tickers: tuple[str, ...], refresh_token: int) -> pd.DataFrame:
-    return load_prices(list(tickers), refresh=refresh_token > 0)
+@st.cache_data(show_spinner="Downloading prices…", max_entries=20)
+def daily_prices(tickers: tuple[str, ...], refresh_token: tuple[int, int]) -> pd.DataFrame:
+    return load_prices(list(tickers), refresh=refresh_token[1] > 0, max_age_hours=DATA_MAX_AGE_HOURS)
 
 
-@st.cache_data(show_spinner="Downloading T-bill rates…")
-def tbill_yield(refresh_token: int) -> pd.Series:
-    return load_tbill_yield(refresh=refresh_token > 0)
+@st.cache_data(show_spinner="Downloading T-bill rates…", max_entries=4)
+def tbill_yield(refresh_token: tuple[int, int]) -> pd.Series:
+    return load_tbill_yield(refresh=refresh_token[1] > 0, max_age_hours=DATA_MAX_AGE_HOURS)
 
 
 def monthly_prices(cfg: Settings) -> pd.DataFrame:
@@ -93,8 +105,8 @@ class Market:
     returns: pd.DataFrame   # holding-period returns with the trading delay, plus a SPY column
 
 
-@st.cache_data(show_spinner="Preparing data…")
-def market(tickers: tuple[str, ...], refresh_token: int, lag_days: int = LAG_DAYS) -> Market:
+@st.cache_data(show_spinner="Preparing data…", max_entries=20)
+def market(tickers: tuple[str, ...], refresh_token: tuple[int, int], lag_days: int = LAG_DAYS) -> Market:
     from quant.backtest import cash_returns_from_yield
     from quant.strategy import execution_returns
 
@@ -108,8 +120,8 @@ def market(tickers: tuple[str, ...], refresh_token: int, lag_days: int = LAG_DAY
 
 
 @st.cache_data(show_spinner="Fitting volatility models (GARCH + LightGBM, walk-forward)… ~15 s the first time",
-               persist="disk")
-def vol_forecasts(tickers: tuple[str, ...], refresh_token: int) -> dict:
+               persist="disk", max_entries=8)
+def vol_forecasts(tickers: tuple[str, ...], refresh_token: tuple[int, int]) -> dict:
     from quant import volatility as V
 
     daily = daily_prices(tickers, refresh_token)

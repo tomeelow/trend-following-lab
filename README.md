@@ -1,5 +1,7 @@
 # quant: learning trend following step by step
 
+**[Live app →](https://trend-following-lab.streamlit.app)** (hosted on Streamlit Community Cloud)
+
 | Phase | Topic | Status |
 |---|---|---|
 | 1 | Simple trend-following strategy (12-month return > 0 → hold, else cash) | ✅ |
@@ -13,6 +15,21 @@
 uv run streamlit run app.py      # opens http://localhost:8501
 uv run pytest -v                 # the test suite (also runnable from the Phase 3 page)
 ```
+
+## Hosting
+
+The app is deployed on [Streamlit Community Cloud](https://share.streamlit.io) from `main`
+(main file `app.py`, Python 3.13). The host installs from `uv.lock`, so don't add a
+`requirements.txt`: it would take precedence over the lockfile.
+
+- **Fresh data:** prices are re-downloaded from Yahoo Finance when the cached copy is more
+  than 12 hours old. If Yahoo refuses (it sometimes rate-limits cloud servers), the app
+  keeps using the cached copy.
+- **Staying awake:** free apps sleep after a while without visitors.
+  [`keep-awake.yml`](.github/workflows/keep-awake.yml) opens the app in a headless browser
+  every 6 hours ([`scripts/keep_awake.py`](scripts/keep_awake.py)) and presses the wake-up
+  button if it's asleep. Run it by hand from the Actions tab. GitHub pauses scheduled
+  workflows after 60 days without commits; re-enable it there if that happens.
 
 ## Layout
 

@@ -1047,13 +1047,9 @@ dependencies = [
     { name = "lightgbm" },
     { name = "pandas" },
     { name = "plotly" },
+    { name = "pytest" },
     { name = "streamlit" },
     { name = "yfinance" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "pytest" },
 ]
 
 [package.metadata]
@@ -1062,12 +1058,10 @@ requires-dist = [
     { name = "lightgbm", specifier = ">=4.7.0" },
     { name = "pandas", specifier = ">=3.1.1" },
     { name = "plotly", specifier = ">=7.1.0" },
+    { name = "pytest", specifier = ">=9.2.0" },
     { name = "streamlit", specifier = ">=1.67.0" },
     { name = "yfinance", specifier = ">=1.8.0" },
 ]
-
-[package.metadata.requires-dev]
-dev = [{ name = "pytest", specifier = ">=9.2.0" }]
 
 [[package]]
 name = "referencing"

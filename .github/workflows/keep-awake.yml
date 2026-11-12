@@ -1,0 +1,41 @@
+name: keep-awake
+
+# Streamlit Community Cloud sleeps free apps after ~12 hours without visitors. Visiting
+# every 6 hours keeps the dashboard up, with slack for GitHub's best-effort cron, which
+# can run late or skip a slot under load.
+
+on:
+  schedule:
+    - cron: "23 */6 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: keep-awake
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  visit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10.0.1
+
+      - name: Install a headless browser
+        run: uv run --no-project --with playwright==1.52.0 playwright install --with-deps chromium
+
+      - name: Visit the app (and wake it if asleep)
+        run: uv run --no-project --with playwright==1.52.0 python scripts/keep_awake.py
+
+      - name: Upload a screenshot if the app didn't load
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: keep-awake-screenshot
+          path: keep-awake.png
+          if-no-files-found: ignore
+          retention-days: 7

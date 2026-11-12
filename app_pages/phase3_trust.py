@@ -205,8 +205,8 @@ with tabs[2]:
         )
 
 # ---------------------------------------------------------------- shared: all lookbacks
-@st.cache_data(show_spinner="Backtesting all 24 lookbacks…")
-def all_lookbacks(tickers: tuple[str, ...], token: int) -> pd.DataFrame:
+@st.cache_data(show_spinner="Backtesting all 24 lookbacks…", max_entries=20)
+def all_lookbacks(tickers: tuple[str, ...], token: tuple[int, int]) -> pd.DataFrame:
     m = market(tickers, token)
     return candidate_returns(m.monthly, m.returns, LOOKBACKS, cash_returns=m.rf, cost_bps=COST_BPS)
 
