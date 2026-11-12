@@ -139,6 +139,9 @@ LGBM_PARAMS = {
     "feature_fraction": 0.8,
     "seed": 0,
     "deterministic": True,
+    # One thread: the data is small, so extra threads only add overhead (16x slower here),
+    # and on shared hosts like Streamlit Cloud they fight over a few cores and get throttled.
+    "num_threads": 1,
     "verbose": -1,
 }
 LGBM_ROUNDS = 300

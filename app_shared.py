@@ -119,7 +119,7 @@ def market(tickers: tuple[str, ...], refresh_token: tuple[int, int], lag_days: i
     return Market(daily, monthly, rf, returns)
 
 
-@st.cache_data(show_spinner="Fitting volatility models (GARCH + LightGBM, walk-forward)… ~15 s the first time",
+@st.cache_data(show_spinner="Fitting volatility models (GARCH + LightGBM, walk-forward)… a few seconds the first time",
                persist="disk", max_entries=8)
 def vol_forecasts(tickers: tuple[str, ...], refresh_token: tuple[int, int]) -> dict:
     from quant import volatility as V
